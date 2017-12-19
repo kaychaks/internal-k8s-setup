@@ -1,0 +1,8 @@
+- ansible_ssh_host: '10.154.194.180.'
+  ansible_user: ''
+  host_name: node1
+  vars: {}
+- ansible_ssh_host: '10.154.194.181.'
+  ansible_user: ''
+  host_name: node2
+  vars: {}

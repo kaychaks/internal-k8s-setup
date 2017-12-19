@@ -1,0 +1,3 @@
+Acquire::http::proxy "{{ vault_nodes.http_proxy  }}";
+Acquire::https::proxy "{{ vault_nodes.https_proxy  }}";
+Acquire::https::apt.dockerproject.org::Verify-Peer "false";

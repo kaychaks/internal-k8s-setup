@@ -1,0 +1,56 @@
+*                                                                  :work:cds:
+** Nodes & Pods Classification Design
+
+   Taints will be used on the nodes to repel pods not meant to be scheduled on them. We will start with a simple initial plan and then could add more sophistication to it as and when required based on the usage patterns and any other use-case specific requirements.
+
+*** Initial Plan
+
+    The initial requirements for us is to fully dedicate few nodes for storage purposes so that Rook uses them to provide for the physical volume claims from application deployments. In that case we will have relevant taints on the storage nodes and respecitve entry in the Rook cluster custom resource definition (CRD) so that Rook creates pods with the correct tolerations. In that way we can ensure those above mentioned nodes will only schedule Rook cluster specific pods.
+
+    For rest of the nodes as there won't be any taints they can schedule other application deployments.
+
+    However, we also addtionally would like to ensure that Rook specific pods are scheduled in those nodes marked exclusively for storage and no where else. To achieve this condition, we have to put a label similar to taint on those nodes and then use the same label to create node affinities on the Rook pods so that they get only scheduled on those labelled nodes (which will be the dedicated storage nodes). The pod specific setting will have to made in the Rook cluster CRD similar to the one made for tolerations as shown below.
+
+**** Implementation Example
+
+     Attaching taints and lables to storage nodes:
+
+     #+BEGIN_SRC shell
+
+     kubectl taint nodes node4 type=storage:NoExecute
+     kubectl label nodes node4 type=storage
+
+     #+END_SRC
+
+     Rook cluster CRD placement settings:
+
+     #+BEGIN_SRC YAML
+
+     placement:
+       all:
+         tolerations:
+         - key: type
+           value: storage
+           operator: Equal
+
+         nodeAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+             - matchExpressions:
+               - key: type
+                 operator: In
+                 values:
+                 - storage
+
+     #+END_SRC
+
+
+*** Future Plans
+
+    In future once we have further segregation of the overall cluster into smaller clusters e.g. Development & Production clusters we might have to adopt more sophisticated classification strategies for nodes and pods. Some options:
+
+    - we can continue following the same approach of taints & tolerations on nodes and pods respecitively to constrain nodes onto relevant pods. This will require application developers to explicitly mention the correct tolerations in their pod specifications. Failing which could result in their pods not getting scheduled in any nodes of the cluster
+
+    - another approach could be to use [[https://kubernetes.io/docs/concepts/workloads/pods/podpreset/][PodPreset]] admission controller where application developers would have to put some basic labels e.g. deployment-env=prod or deployment-env=dev to their pod spec and then our pre-configured PodPreset would add relevant tolerations / nodeAffinity to the pod spec. This way it's less complicated for the application developer and more streamlined from cluster administrator's management perspectives
+
+    - last approach is to go full dynamic with [[https://kubernetes.io/docs/admin/extensible-admission-controllers/][Intializers]] or [[https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19][MutatingAdmissionWebHook]] admission controller. This is required in cases where we want to have truly sophisticated separation of pods for set of nodes based on criterias not limited to tolerations / nodeAffinities.

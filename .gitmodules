@@ -1,0 +1,18 @@
+[submodule "haproxy"]
+	path = haproxy
+	url = https://github.com/kaychaks/k8s-haproxy.git
+[submodule "kubespray"]
+	path = kubespray
+	url = https://github.com/kaychaks/kubespray.git
+[submodule "lv-extend"]
+	path = lv-extend
+	url = https://github.com/kaychaks/k8s-lv-extend.git
+[submodule "mitm-cert-push"]
+	path = mitm-cert-push
+	url = https://github.com/kaychaks/k8s-mitm-cert-push.git
+[submodule "rook-cluster"]
+	path = rook-cluster
+	url = https://github.com/kaychaks/k8s-rook-cluster.git
+[submodule "prometheus-operator"]
+	path = prometheus-operator
+	url = https://github.com/kaychaks/prometheus-operator.git

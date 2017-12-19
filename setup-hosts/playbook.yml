@@ -1,0 +1,36 @@
+---
+- hosts: all
+  tasks:
+    - name : setup apt-conf proxies
+      become : yes
+      become_method : sudo
+      template :
+        src : apt-conf.cfg.j2
+        dest : /etc/apt/apt.conf
+        mode : 0644
+        owner : root
+        group : root
+      tags: proxy
+
+    - name: upgrade kernel
+      become: yes
+      become_method: sudo
+      package:
+        name: linux-generic-hwe-16.04
+        state: present
+      tags: kernel
+      register: kernel_upgrade
+
+    - name: restart machine
+      become: yes
+      become_method: sudo
+      shell: >
+        sleep 2 &&
+        /sbin/shutdown -r now "Kernel upgraded"
+      tags: kernel
+      when: kernel_upgrade | succeeded
+#- import_playbook: ../mitm-cert-push/playbook.yml
+
+  # import_playbook: ../lv-extend/playbook.yml
+  # when: do_lv_extend | default(false)
+...
